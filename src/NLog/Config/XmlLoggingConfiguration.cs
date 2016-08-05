@@ -78,7 +78,7 @@ namespace NLog.Config
         private readonly Dictionary<string, bool> fileMustAutoReloadLookup = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         private string originalFileName;
-        
+
         private LogFactory logFactory = null;
 
         private ConfigurationItemFactory ConfigurationItemFactory
@@ -422,6 +422,7 @@ namespace NLog.Config
 
                 this.CheckUnusedTargets();
 
+
             }
             catch (Exception exception)
             {
@@ -431,8 +432,8 @@ namespace NLog.Config
                     throw;
                 }
 
-                var configurationException = new NLogConfigurationException("Exception occurred when loading configuration from " + fileName, exception);
-                InternalLogger.Error(configurationException, "Error in Parsing Configuration File.");
+                var configurationException = new NLogConfigurationException(exception, "Exception when parsing {0}. ", fileName);
+                InternalLogger.Error(configurationException, "Parsing configuration from {0} failed.", fileName);
 
                 if (!ignoreErrors)
                 {
@@ -1126,8 +1127,17 @@ namespace NLog.Config
             {
                 return;
             }
-
-            PropertyHelper.SetPropertyFromString(o, element.LocalName, this.ExpandSimpleVariables(element.Value), this.ConfigurationItemFactory);
+            var value = this.ExpandSimpleVariables(element.Value);
+            try
+            {
+               
+                PropertyHelper.SetPropertyFromString(o, element.LocalName, value, this.ConfigurationItemFactory);
+            }
+            catch (NLogConfigurationException)
+            {
+                InternalLogger.Warn("Error when setting '{0}' from '<{1}>'", element.LocalName, value);
+                throw;
+            }
         }
 
         private bool AddArrayItemFromElement(object o, NLogXmlElement element)
@@ -1171,8 +1181,16 @@ namespace NLog.Config
                 {
                     continue;
                 }
+                try
+                {
+                    PropertyHelper.SetPropertyFromString(targetObject, childName, this.ExpandSimpleVariables(childValue), this.ConfigurationItemFactory);
+                }
+                catch (NLogConfigurationException)
+                {
+                    InternalLogger.Warn("Error when setting '{0}' on attibute '{1}'", childValue, childName);
+                    throw;
+                }
 
-                PropertyHelper.SetPropertyFromString(targetObject, childName, this.ExpandSimpleVariables(childValue), this.ConfigurationItemFactory);
             }
         }
 

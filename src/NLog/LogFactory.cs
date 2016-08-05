@@ -168,6 +168,11 @@ namespace NLog
                         return this.config;
 
 #if !SILVERLIGHT && !__IOS__ && !__ANDROID__
+                    //load
+                    //log version firsst
+                    //TODO doesnt' work, internallogging is disabled by default.
+                    InternalLogger.LogAssemblyVersion(typeof(ILogger).Assembly);
+
                     if (this.config == null)
                     {
                         // Try to load default configuration.
@@ -242,6 +247,7 @@ namespace NLog
                             }
 #endif
                             this.config.InitializeAll();
+                            
                             LogConfigurationInitialized();
                         }
                         finally
