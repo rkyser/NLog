@@ -33,6 +33,7 @@
 
 namespace NLog.LayoutRenderers
 {
+#if NET4_0 || NET4_5
     using System;
     using System.Text;
 
@@ -99,4 +100,5 @@ namespace NLog.LayoutRenderers
             }
         }
     }
+#endif
 }
